@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Noise | First-round screen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* Config lives in the script block at the bottom */
+  :root{
+    --bg:#F2F3F5; --ink:#202020; --muted:#6B6E76; --line:#DADCE0;
+    --accent:#FF5B26; --ok:#1F8A5B; --warn:#B4541A; --card:#FFFFFF;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font-family:"Poppins",system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);
+       font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  header{display:flex;justify-content:space-between;align-items:center;padding:20px 32px;max-width:1040px;margin:0 auto}
+  .brand{font-weight:600;font-size:26px;letter-spacing:-0.5px}
+  .role{color:var(--muted);font-size:14px}
+  main{max-width:760px;margin:0 auto;padding:12px 24px 64px}
+  .screen{display:none}
+  .screen.on{display:block}
+  h1{font-size:34px;line-height:1.2;font-weight:600;letter-spacing:-0.6px;margin:24px 0 12px}
+  p.lead{color:var(--muted);max-width:60ch;margin:0 0 28px}
+  .steps{margin:0 0 28px;padding-left:20px;max-width:62ch}
+  .steps li{margin:6px 0}
+  label{display:block;font-size:14px;font-weight:500;margin:16px 0 6px}
+  input[type=text],input[type=email],input[type=tel]{width:100%;max-width:420px;padding:12px 14px;border:1px solid var(--line);
+       border-radius:10px;font:inherit;background:#fff}
+  input:focus,button:focus-visible{outline:3px solid rgba(255,91,38,.35);outline-offset:2px}
+  .consent{display:flex;gap:10px;align-items:flex-start;max-width:60ch;margin:20px 0;font-size:14px;color:var(--muted)}
+  .consent input{margin-top:4px;width:18px;height:18px;accent-color:var(--accent)}
+  button{font:inherit;font-weight:500;border:0;border-radius:999px;padding:13px 26px;cursor:pointer;background:var(--ink);color:#fff}
+  button.secondary{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  button:disabled{opacity:.35;cursor:not-allowed}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:24px}
+  .error{color:var(--warn);font-size:14px;margin-top:12px;min-height:20px}
+
+  /* ---------- the stage: the one bold element ---------- */
+  .stage{display:grid;grid-template-columns:180px 1fr;gap:36px;align-items:center;margin-top:28px}
+  .orb-wrap{position:relative;width:180px;height:180px;display:grid;place-items:center}
+  .orb-ring{position:absolute;inset:0;border-radius:50%;border:2px solid var(--line);transition:transform .08s linear,border-color .3s}
+  .orb{width:112px;height:112px;border-radius:50%;background:var(--ink);display:grid;place-items:center;color:#fff;
+       font-size:15px;font-weight:500;transition:background .3s}
+  .speaking .orb{background:var(--ink)}
+  .listening .orb{background:var(--accent)}
+  .listening .orb-ring{border-color:var(--accent)}
+  .qmeta{color:var(--muted);font-size:14px;margin-bottom:8px}
+  .qtext{font-size:24px;line-height:1.4;font-weight:500;letter-spacing:-0.2px;max-width:34ch}
+  .reveal{background:var(--card);border-left:3px solid var(--accent);padding:14px 18px;border-radius:0 10px 10px 0;
+          margin:0 0 16px;font-size:15px;max-width:60ch}
+  .status{margin-top:28px;font-size:14px;color:var(--muted);min-height:22px}
+  .caption{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+           min-height:110px;max-height:220px;overflow:auto;font-size:15px}
+  .caption .interim{color:var(--muted)}
+  .caption:empty::before{content:"Your words will appear here as you speak.";color:var(--muted)}
+  .countdown{color:var(--accent);font-weight:500}
+  .progress{height:4px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:6px}
+  .progress > div{height:100%;background:var(--ink);width:0;transition:width .4s}
+  .timer{font-variant-numeric:tabular-nums}
+  .done-mark{width:64px;height:64px;border-radius:50%;background:var(--ok);display:grid;place-items:center;color:#fff;font-size:30px;margin-top:32px}
+  @media (max-width:640px){
+    header{padding:16px 20px}
+    .stage{grid-template-columns:1fr;justify-items:start;gap:20px}
+    .orb-wrap{width:120px;height:120px}.orb{width:76px;height:76px;font-size:13px}
+    h1{font-size:28px}.qtext{font-size:20px}
+  }
+  @media (prefers-reduced-motion:reduce){.orb-ring{transition:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">noise</div>
+  <div class="role" id="roleLabel"></div>
+</header>
+
+<main>
+  <!-- 1. Welcome -->
+  <section class="screen on" id="s-intro">
+    <h1>Your first-round screen</h1>
+    <p class="lead">An automated interviewer will read out each question. You answer out loud, the way you would on a call. It takes about 30 minutes.</p>
+    <ol class="steps">
+      <li>Use Google Chrome or Microsoft Edge on a laptop, in a quiet room.</li>
+      <li>Each question is read aloud. Listen, then answer in your own words.</li>
+      <li>When you finish an answer, click <b>I'm done</b>, or pause and it moves on by itself.</li>
+      <li>Please stay on this tab and answer without notes or other tools. We care how you think, not a polished answer.</li>
+    </ol>
+    <label for="name">Full name</label><input id="name" type="text" autocomplete="name">
+    <label for="email">Email</label><input id="email" type="email" autocomplete="email">
+    <label for="phone">Phone</label><input id="phone" type="tel" autocomplete="tel">
+    <div class="consent"><input type="checkbox" id="consent"><label for="consent" style="margin:0;font-weight:400">I understand my spoken answers are transcribed and reviewed by the Noise hiring team with AI assistance.</label></div>
+    <div class="row"><button id="toCheck" disabled>Check my microphone</button></div>
+    <div class="error" id="introErr"></div>
+  </section>
+
+  <!-- 2. Mic + speaker check -->
+  <section class="screen" id="s-check">
+    <h1>Quick sound check</h1>
+    <p class="lead">Click <b>Play test</b> to make sure you can hear the interviewer. Then say: <i>"Hi Noise, I'm ready."</i></p>
+    <div class="stage" id="checkStage">
+      <div class="orb-wrap"><div class="orb-ring" id="checkRing"></div><div class="orb">Mic</div></div>
+      <div><div class="caption" id="checkCaption"></div></div>
+    </div>
+    <div class="row">
+      <button class="secondary" id="playTest">Play test</button>
+      <button id="startInterview" disabled>Start interview</button>
+    </div>
+    <div class="error" id="checkErr"></div>
+  </section>
+
+  <!-- 3. Interview -->
+  <section class="screen" id="s-interview">
+    <div class="qmeta"><span id="qCount"></span> <span class="timer" id="timer"></span></div>
+    <div class="progress"><div id="bar"></div></div>
+    <div class="stage" id="stage">
+      <div class="orb-wrap"><div class="orb-ring" id="ring"></div><div class="orb" id="orbLabel">Listen</div></div>
+      <div>
+        <div class="reveal" id="reveal" hidden></div>
+        <div class="qtext" id="qtext"></div>
+      </div>
+    </div>
+    <div class="status" id="status"></div>
+    <div class="caption" id="caption"></div>
+    <div class="row">
+      <button id="doneBtn" disabled>I'm done</button>
+      <button class="secondary" id="repeatBtn" disabled>Repeat question</button>
+    </div>
+  </section>
+
+  <!-- 4. Typed details -->
+  <section class="screen" id="s-details">
+    <h1>Last step</h1>
+    <p class="lead">A few details we need for every candidate.</p>
+    <label for="curCtc">Current fixed CTC (₹ lakh per year)</label><input id="curCtc" type="text" inputmode="decimal">
+    <label for="expCtc">Expected fixed CTC (₹ lakh per year)</label><input id="expCtc" type="text" inputmode="decimal">
+    <label for="notice">Notice period (days)</label><input id="notice" type="text" inputmode="numeric">
+    <label for="city">Current city</label><input id="city" type="text">
+    <div class="row"><button id="submitBtn">Submit interview</button></div>
+    <div class="error" id="submitErr"></div>
+  </section>
+
+  <!-- 5. Done -->
+  <section class="screen" id="s-done">
+    <div class="done-mark">✓</div>
+    <h1>Thanks, you're all done</h1>
+    <p class="lead" id="doneMsg">Your interview has been submitted. The Noise hiring team will get back to you within a few working days.</p>
+    <div class="row"><button class="secondary" id="downloadBtn" hidden>Download a copy (test mode)</button></div>
+  </section>
+</main>
+
+<script>
+/* =====================================================================
+   CONFIG — edit these, nothing else needs to change
+   ===================================================================== */
+const CONFIG = {
+  // Paste your Apps Script web app URL here. Leave empty for test mode
+  // (answers are shown for download instead of being sent).
+  SUBMIT_URL: "https://script.google.com/a/macros/nexxbase.com/s/AKfycbzk-QKuw4DxgK0aP-TVN-eFXKuqfHrLS1wCSbdjA2LNp2s_-7Bt1C3G0biVLb5vqnMB/exec",
+  SHARED_KEY: "Noise",
+  SILENCE_SECONDS: 7,        // pause length before the countdown starts
+  COUNTDOWN_SECONDS: 5,      // countdown before moving on
+  MAX_ANSWER_SECONDS: 180,   // hard cap per answer
+  LANG: "en-IN"
+};
+
+/* Roles: add more by copying the pm-growth block. Choose with ?role=key in the link. */
+const ROLES = {
+  "pm-growth": {
+    label: "Product Manager – Growth (Monetisation)",
+    intro: "Hi {name}. I'm Noise's screening interviewer. I'll ask you nine questions about your work and a short product case. Take a moment to think, then answer out loud. Let's begin.",
+    questions: [
+      {id:"Q1", stage:"Ownership",
+       q:"Tell me about one growth or monetisation number you personally moved. What was it before and after, what did you decide yourself, and what would have happened without you?"},
+      {id:"Q2", stage:"Ownership",
+       q:"Describe an experiment you ran that failed or came back inconclusive. How did you know, and what did you do next?"},
+      {id:"Q3", stage:"Real user",
+       q:"Have you used the NoiseFit app or worn a Noise watch? Describe the typical Noise buyer. Who are they, where do they live, what did they pay, and why did they buy it?"},
+      {id:"Q4", stage:"Real user",
+       reveal:"Here is some context. About nine in ten Noise owners bought a watch for under two thousand rupees. Most treat it as a style and status purchase made about once a year, not as a health device. Most of the top-selling cities are Hindi-speaking tier two and tier three cities.",
+       q:"What in your earlier picture was wrong, and what changes for you?"},
+      {id:"Q5", stage:"Micro-case",
+       q:"You own monetisation for the NoiseFit app. Before seeing any usage data, what is the one thing you would build first to grow paying users? Commit to a single bet."},
+      {id:"Q6", stage:"Micro-case",
+       reveal:"Here is some usage data. Today almost all paid activity in the app is watch-face customisation, about eighty percent. The rest is step-tracking features. Prices range from forty-nine to two hundred and forty-nine rupees. Tens of thousands of users download watch faces every day. About four in ten users are still active after thirty days.",
+       q:"Do you keep or change your bet? Give me one feature, who pays for it, the price, and the single metric you would test it on."},
+      {id:"Q7", stage:"Micro-case",
+       q:"Your new paywall test shows a four percent lift in paid conversion, but thirty-day retention dropped by two points. Do you ship it? Walk me through your reasoning."},
+      {id:"Q8", stage:"Micro-case",
+       q:"What is the biggest way your feature could fail after launch, and how would you spot it in the first two weeks?"},
+      {id:"Q9", stage:"Fit",
+       q:"Last one. Why Noise, and why this role now?"}
+    ],
+    outro: "That's the last question. Thank you. Please fill in a few details on the next screen and submit."
+  }
+};
+
+/* ===================================================================== */
+const $ = id => document.getElementById(id);
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const params = new URLSearchParams(location.search);
+const ROLE_KEY = ROLES[params.get("role")] ? params.get("role") : "pm-growth";
+const ROLE = ROLES[ROLE_KEY];
+$("roleLabel").textContent = ROLE.label;
+
+const state = {
+  candidate:{}, answers:[], startedAt:null, idx:0,
+  tabSwitches:0, hiddenMs:0, hiddenSince:null, blurs:0
+};
+let stream=null, audioCtx=null, analyser=null, levelRaf=null;
+
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));$(id).classList.add("on");window.scrollTo(0,0)}
+
+/* ---------- integrity logging ---------- */
+let qTab=0, qHiddenMs=0;
+document.addEventListener("visibilitychange",()=>{
+  if(!state.startedAt) return;
+  if(document.hidden){state.tabSwitches++;qTab++;state.hiddenSince=Date.now()}
+  else if(state.hiddenSince){const d=Date.now()-state.hiddenSince;state.hiddenMs+=d;qHiddenMs+=d;state.hiddenSince=null}
+});
+window.addEventListener("blur",()=>{if(state.startedAt) state.blurs++});
+
+/* ---------- intro ---------- */
+function validIntro(){
+  const ok=$("name").value.trim().length>1 && /\S+@\S+\.\S+/.test($("email").value) && $("consent").checked;
+  $("toCheck").disabled=!ok;
+}
+["name","email","phone","consent"].forEach(i=>$(i).addEventListener("input",validIntro));
+$("consent").addEventListener("change",validIntro);
+
+$("toCheck").onclick=async()=>{
+  if(!SR || !window.speechSynthesis){
+    $("introErr").textContent="This browser can't run the interview. Please open this link in Google Chrome or Microsoft Edge on a laptop.";return;
+  }
+  state.candidate={name:$("name").value.trim(),email:$("email").value.trim(),phone:$("phone").value.trim()};
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    analyser=audioCtx.createAnalyser();analyser.fftSize=512;
+    audioCtx.createMediaStreamSource(stream).connect(analyser);
+  }catch(e){
+    $("introErr").textContent="Microphone access was blocked. Click the lock icon in the address bar, allow the microphone, then try again.";return;
+  }
+  show("s-check");runLevel("checkRing");checkListen();
+};
+
+/* ---------- mic level ring ---------- */
+function runLevel(ringId){
+  cancelAnimationFrame(levelRaf);
+  const data=new Uint8Array(analyser.fftSize);
+  const ring=$(ringId);
+  const loop=()=>{
+    analyser.getByteTimeDomainData(data);
+    let sum=0;for(const v of data){const x=(v-128)/128;sum+=x*x}
+    const rms=Math.sqrt(sum/data.length);
+    ring.style.transform=`scale(${1+Math.min(rms*4,0.45)})`;
+    levelRaf=requestAnimationFrame(loop);
+  };loop();
+}
+
+/* ---------- speech synthesis (sentence-chunked; Chrome cuts long utterances) ---------- */
+let voice=null;
+function pickVoice(){
+  const vs=speechSynthesis.getVoices();
+  voice=vs.find(v=>v.lang==="en-IN")||vs.find(v=>/en-GB/.test(v.lang))||vs.find(v=>/^en/.test(v.lang))||null;
+}
+pickVoice();speechSynthesis.onvoiceschanged=pickVoice;
+function speak(text){
+  return new Promise(resolve=>{
+    speechSynthesis.cancel();
+    const parts=text.match(/[^.?!]+[.?!]*/g)||[text];
+    let i=0;
+    const next=()=>{
+      if(i>=parts.length) return resolve();
+      const u=new SpeechSynthesisUtterance(parts[i++].trim());
+      if(voice) u.voice=voice; u.lang=voice?voice.lang:"en-IN"; u.rate=0.97;
+      u.onend=next; u.onerror=next;
+      speechSynthesis.speak(u);
+    };next();
+  });
+}
+$("playTest").onclick=()=>speak("Hello. If you can hear me clearly, you're all set.");
+
+/* ---------- speech recognition wrapper ---------- */
+function makeListener(onText){
+  let rec=null, active=false, finalText="";
+  function start(){
+    active=true; rec=new SR(); rec.lang=CONFIG.LANG; rec.continuous=true; rec.interimResults=true;
+    rec.onresult=e=>{
+      let interim="";
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const r=e.results[i];
+        if(r.isFinal) finalText+=r[0].transcript.trim()+" "; else interim+=r[0].transcript;
+      }
+      onText(finalText,interim);
+    };
+    rec.onerror=e=>{ if(e.error==="not-allowed"||e.error==="service-not-allowed"){active=false;onText(finalText,"",e.error)} };
+    rec.onend=()=>{ if(active){ try{rec.start()}catch(_){ setTimeout(()=>active&&rec.start(),300)} } };
+    rec.start();
+  }
+  function stop(){active=false; try{rec&&rec.stop()}catch(_){}}
+  return {start,stop,get text(){return finalText.trim()}};
+}
+
+/* ---------- sound check ---------- */
+let checkL=null;
+function checkListen(){
+  checkL=makeListener((f,i,err)=>{
+    if(err){$("checkErr").textContent="Speech recognition was blocked. Allow the microphone and reload the page.";return}
+    $("checkCaption").innerHTML=esc(f)+'<span class="interim">'+esc(i)+'</span>';
+    if((f+i).trim().split(/\s+/).length>=2) $("startInterview").disabled=false;
+  });
+  checkL.start();
+}
+$("startInterview").onclick=()=>{
+  checkL.stop(); state.startedAt=new Date().toISOString(); show("s-interview"); runLevel("ring"); runInterview();
+};
+
+/* ---------- interview loop ---------- */
+async function runInterview(){
+  setMode("speaking","Listen");
+  $("qtext").textContent="";$("reveal").hidden=true;
+  await speak(ROLE.intro.replace("{name}",state.candidate.name.split(" ")[0]));
+  for(state.idx=0; state.idx<ROLE.questions.length; state.idx++){
+    await ask(ROLE.questions[state.idx]);
+  }
+  setMode("speaking","Done"); $("status").textContent="";
+  await speak(ROLE.outro);
+  stopMedia(); show("s-details");
+}
+
+function setMode(mode,label){
+  $("stage").classList.remove("speaking","listening");$("stage").classList.add(mode);$("orbLabel").textContent=label;
+}
+
+function ask(item){
+  return new Promise(async resolve=>{
+    const n=state.idx+1, total=ROLE.questions.length;
+    $("qCount").textContent=`Question ${n} of ${total}`;
+    $("bar").style.width=`${(n-1)/total*100}%`;
+    $("caption").innerHTML=""; $("timer").textContent="";
+    $("doneBtn").disabled=true; $("repeatBtn").disabled=true;
+    qTab=0; qHiddenMs=0;
+    let repeats=0, firstWordAt=null, lastHeard=Date.now(), listenStart=null, finished=false, countdownEnd=null, autoEnded=null;
+
+    if(item.reveal){$("reveal").textContent=item.reveal;$("reveal").hidden=false}else{$("reveal").hidden=true}
+    $("qtext").textContent=item.q;
+
+    const listener=makeListener((f,i)=>{
+      $("caption").innerHTML=esc(f)+'<span class="interim">'+esc(i)+'</span>';
+      $("caption").scrollTop=1e6;
+      if((f+i).trim()){ lastHeard=Date.now(); if(!firstWordAt) firstWordAt=Date.now(); countdownEnd=null; $("doneBtn").disabled=false }
+    });
+
+    async function speakQuestion(){
+      setMode("speaking","Listen");$("status").textContent="";
+      listener.stop();
+      await speak((item.reveal?item.reveal+" ":"")+item.q);
+      if(finished) return;
+      setMode("listening","Your turn");
+      listenStart=listenStart||Date.now(); lastHeard=Date.now();
+      $("status").textContent="Listening. Take a moment, then answer out loud.";
+      $("repeatBtn").disabled=false;
+      listener.start();
+    }
+
+    function finish(reason){
+      if(finished) return; finished=true; autoEnded=reason;
+      clearInterval(tick); listener.stop();
+      $("doneBtn").disabled=true;$("repeatBtn").disabled=true;
+      state.answers.push({
+        id:item.id, stage:item.stage, question:item.q, reveal:item.reveal||"",
+        answer:listener.text||"(no answer captured)",
+        durationSec: listenStart?Math.round((Date.now()-listenStart)/1000):0,
+        timeToFirstWordSec: firstWordAt&&listenStart?Math.round((firstWordAt-listenStart)/1000):null,
+        repeats, tabSwitches:qTab, hiddenSec:Math.round(qHiddenMs/1000), endedBy:reason
+      });
+      setTimeout(resolve,600);
+    }
+
+    $("doneBtn").onclick=()=>finish("candidate");
+    $("repeatBtn").onclick=()=>{repeats++; speakQuestion()};
+
+    const tick=setInterval(()=>{
+      if(!listenStart||finished) return;
+      const el=Math.round((Date.now()-listenStart)/1000);
+      $("timer").textContent=`· ${Math.floor(el/60)}:${String(el%60).padStart(2,"0")}`;
+      if(el>=CONFIG.MAX_ANSWER_SECONDS){finish("time-limit");return}
+      if(el>=10) $("doneBtn").disabled=false;
+      const silent=(Date.now()-lastHeard)/1000;
+      if(firstWordAt && silent>=CONFIG.SILENCE_SECONDS){
+        if(!countdownEnd) countdownEnd=Date.now()+CONFIG.COUNTDOWN_SECONDS*1000;
+        const left=Math.ceil((countdownEnd-Date.now())/1000);
+        if(left<=0){finish("pause");return}
+        $("status").innerHTML=`<span class="countdown">Moving to the next question in ${left}s.</span> Keep talking if you're not finished.`;
+      }else if(!firstWordAt && el>=40){
+        $("status").textContent="We can't hear anything yet. Check your microphone, or click Repeat question.";
+      }else if(firstWordAt){
+        $("status").textContent="Listening.";
+      }
+    },250);
+
+    await speakQuestion();
+  });
+}
+
+function stopMedia(){cancelAnimationFrame(levelRaf); if(stream) stream.getTracks().forEach(t=>t.stop()); speechSynthesis.cancel()}
+
+/* ---------- submit ---------- */
+function payload(){
+  return {
+    key:CONFIG.SHARED_KEY, role:ROLE_KEY, roleLabel:ROLE.label,
+    candidate:{...state.candidate,
+      currentCtc:$("curCtc").value.trim(), expectedCtc:$("expCtc").value.trim(),
+      noticeDays:$("notice").value.trim(), city:$("city").value.trim()},
+    startedAt:state.startedAt, finishedAt:new Date().toISOString(),
+    integrity:{tabSwitches:state.tabSwitches, hiddenSec:Math.round(state.hiddenMs/1000), windowBlurs:state.blurs},
+    userAgent:navigator.userAgent, answers:state.answers
+  };
+}
+let lastPayload=null;
+$("submitBtn").onclick=async()=>{
+  lastPayload=payload();
+  $("submitBtn").disabled=true; $("submitErr").textContent="";
+  if(!CONFIG.SUBMIT_URL){ show("s-done"); $("doneMsg").textContent="Test mode: nothing was sent. Download the copy to see what the hiring team would receive."; $("downloadBtn").hidden=false; return }
+  try{
+    if(CONFIG.SUBMIT_URL.includes("/a/macros/")){
+      // Domain-only deployment (internal testing): send with the tester's Google login.
+      // The browser can't read the reply in this mode, so check the Sheet or email to confirm.
+      await fetch(CONFIG.SUBMIT_URL,{method:"POST",mode:"no-cors",credentials:"include",body:JSON.stringify(lastPayload)});
+      show("s-done");
+      $("doneMsg").textContent="Submitted (internal test mode). Check the Sheet or your email to confirm it arrived.";
+      $("downloadBtn").hidden=false;
+      return;
+    }
+    const r=await fetch(CONFIG.SUBMIT_URL,{method:"POST",body:JSON.stringify(lastPayload)}); // text/plain avoids a CORS preflight
+    const j=await r.json();
+    if(!j.ok) throw new Error(j.error||"Submission rejected");
+    show("s-done");
+  }catch(e){
+    $("submitBtn").disabled=false;
+    $("submitErr").innerHTML="Your answers couldn't be sent. Check your connection and click Submit again. If it keeps failing, <a href='#' id='dl2'>download a copy</a> and email it to the recruiter.";
+    $("dl2").onclick=ev=>{ev.preventDefault();download()};
+  }
+};
+$("downloadBtn").onclick=download;
+function download(){
+  const blob=new Blob([JSON.stringify(lastPayload||payload(),null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download=`noise-screen-${(state.candidate.name||"candidate").replace(/\s+/g,"-")}.json`;a.click();
+}
+
+window.addEventListener("beforeunload",e=>{ if(state.startedAt && !lastPayload){e.preventDefault();e.returnValue=""} });
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+</script>
+</body>
+</html>
